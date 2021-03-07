@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup as soup
 from webdriver_manager.chrome import ChromeDriverManager
 import pandas as pd
 import datetime as dt
-
+import time
 
 def scrape_all():
      # Initiate headless driver for deployment
@@ -25,8 +25,11 @@ def scrape_all():
         "last_modified": dt.datetime.now()
     }
 
+    data["hemispheres"] = hemispheres(browser)
+    
     # Stop webdriver and return data
     browser.quit()
+    #return data
     return data
 
 def mars_news(browser):
@@ -100,8 +103,34 @@ def mars_facts():
     # Convert dataframe into HTML format, add bootstrap
     return df.to_html()
 
- 
+def hemispheres(browser):
+    #Use browser to visit the URL 
+    url = 'https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars'
+    browser.visit(url)
 
+    #Create a list to hold the images and titles.
+    hemisphere_image_urls = []
+
+    #Write code to retrieve the image urls and titles for each hemisphere.
+    hem_html = browser.html
+    hem_soup = soup(hem_html, 'html.parser')
+    hem_url = hem_soup.find_all('div', class_= 'description')
+
+    url_start = 'https://astrogeology.usgs.gov'
+
+    for url in hem_url:
+        title = url.find('h3').get_text()
+        url_link = url_start + url.find('a')['href']
+        browser.visit(url_link)
+        time.sleep(3)
+        image_html = browser.html
+        image_soup = soup(image_html, 'html.parser')
+        image_url_div = image_soup.find('div', class_ = 'downloads')
+        image_url = image_url_div.find('a')['href']
+        hemisphere_image_urls.append({'img_url':image_url, 'title':title})
+
+    #Return the list that holds the dictionary of each image url and title.
+    return hemisphere_image_urls
 
 
 
